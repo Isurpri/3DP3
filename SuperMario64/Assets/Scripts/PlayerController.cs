@@ -1,5 +1,5 @@
 using UnityEngine;
-public class PlayerController : MonoBehaviour, IRestartGameElement
+public class PlayerController : MonoBehaviour//, IRestartGameElement
 {
     public enum TPunchType
     {
@@ -42,7 +42,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         m_KickCollider.SetActive(false);
         m_StartPosition=transform.position;
         m_StartRotation=transform.rotation;
-        GameManager.GetGameManager().AddRestartGameElement(this);
+        // GameManager.GetGameManager().AddRestartGameElement(this);
     }
     void Update()
     {
