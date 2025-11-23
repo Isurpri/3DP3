@@ -19,6 +19,17 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
     [Range(0.0f, 1.0f)] public float m_RotationLerpPct = 0.8f;
     public float m_DampTime = 0.2f;
 
+    [Header("UI")]
+    public int m_Life = 8;
+    public int coins = 0;
+
+
+    [Header("Jump")]
+    public KeyCode m_Keyjump= KeyCode.Space;
+    public float m_jumpSpeed=6.0f;
+    public float m_KilljumpSpeed = 4.0f;
+    public float m_MaxAngleToKillGoomba = 30.0f;
+
     [Header ("Punch")]
     public float m_MaxTimeToComboPunch=0.8f;
     int m_CurrentPunchId;
@@ -27,8 +38,17 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
     public GameObject m_LeftHandPunchCollider;
     public GameObject m_KickCollider;
 
+
     [Header ("Input")]
     public int m_PunchMouseButton=0;
+
+    [Header("Elevator")]
+    Collider m_ElevatorCollider;
+    public float m_MaxAngleToAttachElevator = 30.0f;
+
+    [Header("Audio")]
+    public AudioSource m_footRightStepAudio;
+    public AudioSource m_footLeftStepAudio;
     private void Awake()
     {
         m_CharacterController=GetComponent<CharacterController>();
@@ -42,7 +62,7 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
         m_KickCollider.SetActive(false);
         m_StartPosition=transform.position;
         m_StartRotation=transform.rotation;
-        // GameManager.GetGameManager().AddRestartGameElement(this);
+        //GameManager.GetGameManager().AddRestartGameElement(this);
     }
     void Update()
     {
@@ -81,17 +101,28 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
             transform.rotation=Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(l_Movement), m_RotationLerpPct);
         }
 
+        if (Input.GetKey(m_Keyjump))
+        {
+            if(CanJump())
+                Jump();
+        }
+
         l_Movement*=l_Speed*Time.deltaTime;
         m_VerticalSpeed+=Physics.gravity.y*Time.deltaTime;
         l_Movement.y=m_VerticalSpeed*Time.deltaTime;
         CollisionFlags l_CollisionFlags = m_CharacterController.Move(l_Movement);
-        if((l_CollisionFlags & CollisionFlags.CollidedBelow) != 0)
+        if ((l_CollisionFlags & CollisionFlags.CollidedBelow) != 0 && m_VerticalSpeed < 0.0f)
             m_VerticalSpeed = 0.0f;
         else if((l_CollisionFlags & CollisionFlags.CollidedAbove) !=0 && m_VerticalSpeed>0.0f)
             m_VerticalSpeed = 0.0f;
 
             UpdatePucnh();
     }
+    private void LateUpdate()
+    {
+        UpdateElevator();
+    }
+ 
     void UpdatePucnh()
     {
         if(CanPunch() && Input.GetMouseButtonDown(m_PunchMouseButton))
@@ -101,6 +132,8 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
     {
         return !m_Animator.IsInTransition(0) && m_Animator.GetCurrentAnimatorStateInfo(0).shortNameHash==Animator.StringToHash("Movement");
     }
+
+   
     void Punch()
     {
         float l_DiffPunchTime=Time.time-m_LastPunchTime;
@@ -127,5 +160,113 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
         transform.position=m_StartPosition;
         transform.rotation=m_StartRotation;
         m_CharacterController.enabled = true;
+    }
+    bool CanKillWithFeet(ControllerColliderHit hit)
+    {
+        float l_Dot = Vector3.Dot(hit.normal, Vector3.up);
+        return m_VerticalSpeed < 0.0f && l_Dot > Mathf.Cos(m_MaxAngleToKillGoomba * Mathf.Deg2Rad);
+    }
+    bool CanJump()
+    {
+        return true;
+    }
+
+    void Jump()
+    {
+        m_VerticalSpeed = m_jumpSpeed;
+    }
+    private void OnControllerColliderHit(ControllerColliderHit hit)
+    {
+        if (hit.collider.CompareTag("Goomba"))
+        {
+            GoombaEnemy l_GoombaEnemy = hit.collider.GetComponent<GoombaEnemy>();
+            if (CanKillWithFeet(hit))
+            {
+                l_GoombaEnemy.Kill();
+                JumpOverEnemy();
+            }
+            Debug.DrawRay(hit.point, hit.normal, Color.red, 5.0f);
+        }
+    }
+    void JumpOverEnemy()
+    {
+        m_VerticalSpeed = m_KilljumpSpeed;
+
+    }
+
+    public void Step(AnimationEvent _AnimEvent)
+    {
+        AudioSource l_CurrentAudioSource=null;
+        if (_AnimEvent.stringParameter == "Left")
+        {
+            l_CurrentAudioSource=m_footLeftStepAudio;
+        }
+        else if (_AnimEvent.stringParameter == "Right")
+        {
+            l_CurrentAudioSource = m_footRightStepAudio;
+        }
+
+        AudioClip l_AudioClip=(AudioClip)_AnimEvent.objectReferenceParameter;
+        l_CurrentAudioSource.clip=l_AudioClip;
+        l_CurrentAudioSource.Play();
+    }
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Elevator"))
+        {
+            if (CanAttachElevator(other))
+            {
+                AttachElevator(other);
+            }
+        }
+    }
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Elevator"))
+        {
+            DetachElevator();
+        }
+    }
+ 
+    bool CanAttachElevator(Collider ElevatorCollider) 
+    {
+
+        return Vector3.Dot(ElevatorCollider.transform.up, Vector3.up)> Mathf.Cos(m_MaxAngleToAttachElevator*Mathf.Deg2Rad);
+    }
+    void AttachElevator(Collider ElevatorCollider)
+    {
+        transform.SetParent(ElevatorCollider.transform.parent);
+        m_ElevatorCollider= ElevatorCollider;
+    }
+    void DetachElevator()
+    {
+        transform.SetParent(null);
+        UpdateUpElevator();
+        m_ElevatorCollider = null;
+    }
+    void UpdateUpElevator()
+    {
+        Vector3 l_direction = transform.forward;
+        l_direction.y = 0.0f;
+        l_direction.Normalize();
+        transform.rotation=Quaternion.LookRotation(l_direction,Vector3.up);
+    }
+    void UpdateElevator()
+    {
+        if(m_ElevatorCollider!=null)
+            UpdateUpElevator();
+    }
+
+    public void AddCoin()
+    {
+        ++coins;
+        GameManager.GetGameManager().m_GameUI.SetCoins(coins);
+        GameManager.GetGameManager().m_GameUI.ShowUI();
+    }
+    public void Hit()
+    {
+        --m_Life;
+        GameManager.GetGameManager().m_GameUI.SetLifeBar(m_Life/8.0f);
+        GameManager.GetGameManager().m_GameUI.ShowUI();
     }
 }
