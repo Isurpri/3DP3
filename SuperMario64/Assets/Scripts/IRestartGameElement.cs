@@ -1,4 +1,4 @@
 public interface IRestartGameElement
 {
-    void RestartGame();
+   void RestartGame();
 }

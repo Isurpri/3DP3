@@ -9,10 +9,10 @@ public class GameUI : MonoBehaviour
 
     [Header("Animations")]
     public Animation m_Animation;
-    public Animation m_InAnimationClip;
-    public Animation m_OutAnimationClip;
-    public Animation m_StayInAnimationClip;
-    public Animation m_StayOutAnimationClip;
+    public AnimationClip m_InAnimationClip;
+    public AnimationClip m_OutAnimationClip;
+    public AnimationClip m_StayInAnimationClip;
+    public AnimationClip m_StayOutAnimationClip;
     public float m_ShowUIWaitTime = 4.0f;
 
     public void Start()

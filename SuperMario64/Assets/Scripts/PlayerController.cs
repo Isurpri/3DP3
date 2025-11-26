@@ -1,5 +1,5 @@
 using UnityEngine;
-public class PlayerController : MonoBehaviour//, IRestartGameElement
+public class PlayerController : MonoBehaviour, IRestartGameElement
 {
     public enum TPunchType
     {
@@ -21,6 +21,7 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
 
     [Header("UI")]
     public int m_Life = 8;
+    public int m_maxLife;
     public int coins = 0;
 
 
@@ -56,6 +57,7 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
     }
     void Start()
     {
+        m_maxLife = m_Life;
         m_LastPunchTime=-m_MaxTimeToComboPunch;
         m_RightHandPunchCollider.SetActive(false);
         m_LeftHandPunchCollider.SetActive(false);
@@ -154,7 +156,7 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
         else if(PunchType==TPunchType.KICK)
             m_KickCollider.SetActive(Active);
     }
-    void RestartGame()
+   public void RestartGame()
     {
         m_CharacterController.enabled = false;
         transform.position=m_StartPosition;
@@ -219,6 +221,14 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
                 AttachElevator(other);
             }
         }
+        else if (other.CompareTag("Item"))
+        {
+            Item l_Item = other.GetComponent<Item>();
+            if (l_Item.CanPick())
+            {
+                l_Item.Pick();
+            }
+        }
     }
     private void OnTriggerExit(Collider other)
     {
@@ -257,10 +267,16 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
             UpdateUpElevator();
     }
 
-    public void AddCoin()
+    public void AddCoin(int coin)
     {
-        ++coins;
+        coins += coin;
         GameManager.GetGameManager().m_GameUI.SetCoins(coins);
+        GameManager.GetGameManager().m_GameUI.ShowUI();
+    }
+    public void AddHealth(int Health)
+    {
+        m_Life += Health;
+        GameManager.GetGameManager().m_GameUI.SetLifeBar(m_Life / 8.0f);
         GameManager.GetGameManager().m_GameUI.ShowUI();
     }
     public void Hit()
@@ -269,4 +285,5 @@ public class PlayerController : MonoBehaviour//, IRestartGameElement
         GameManager.GetGameManager().m_GameUI.SetLifeBar(m_Life/8.0f);
         GameManager.GetGameManager().m_GameUI.ShowUI();
     }
+
 }
