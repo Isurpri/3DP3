@@ -135,7 +135,8 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         l_Movement.y=m_VerticalSpeed*Time.deltaTime;
         CollisionFlags l_CollisionFlags = m_CharacterController.Move(l_Movement);
         if ((l_CollisionFlags & CollisionFlags.CollidedBelow) != 0 && m_VerticalSpeed < 0.0f)
-            m_VerticalSpeed = 0.0f;
+            if (m_VerticalSpeed <0)
+                m_VerticalSpeed = -2.0f;
         else if((l_CollisionFlags & CollisionFlags.CollidedAbove) !=0 && m_VerticalSpeed>0.0f)
             m_VerticalSpeed = 0.0f;
 
