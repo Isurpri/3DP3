@@ -223,6 +223,13 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
                 l_GoombaEnemy.Kill();
                 JumpOverEnemy();
             }
+            else
+            {
+                if(l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL)
+                {
+                    Hit();
+                }
+            }
             Debug.DrawRay(hit.point, hit.normal, Color.red, 5.0f);
         }
     }
