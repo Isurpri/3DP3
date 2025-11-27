@@ -28,8 +28,13 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     [Header("Jump")]
     public KeyCode m_Keyjump= KeyCode.Space;
     public float m_jumpSpeed=6.0f;
+    public float m_DoubleJumpSpeed=8.0f;
+    public float m_TripleJumpSpeed=10.0f;
     public float m_KilljumpSpeed = 4.0f;
     public float m_MaxAngleToKillGoomba = 30.0f;
+    public float m_MaxTimeToComboJump = 0.5f; 
+    int m_CurrentJumpId = 0;
+    float m_LastJumpTime;
 
     [Header ("Punch")]
     public float m_MaxTimeToComboPunch=0.8f;
@@ -50,6 +55,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     [Header("Audio")]
     public AudioSource m_footRightStepAudio;
     public AudioSource m_footLeftStepAudio;
+    
     private void Awake()
     {
         m_CharacterController=GetComponent<CharacterController>();
@@ -103,6 +109,16 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
             transform.rotation=Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(l_Movement), m_RotationLerpPct);
         }
 
+        bool l_IsGrounded = m_CharacterController.isGrounded;
+        if (l_IsGrounded)
+        {
+            float l_DiffJumpTime = Time.time - m_LastJumpTime;
+            if (m_CurrentJumpId > 0 && l_DiffJumpTime >= m_MaxTimeToComboJump)
+            {
+                m_CurrentJumpId = 0; 
+                m_Animator.SetInteger("JumpId", m_CurrentJumpId);
+            }
+        }
         if (Input.GetKey(m_Keyjump))
         {
             if(CanJump())
@@ -111,6 +127,11 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
 
         l_Movement*=l_Speed*Time.deltaTime;
         m_VerticalSpeed+=Physics.gravity.y*Time.deltaTime;
+        
+        bool l_IsFalling = !m_CharacterController.isGrounded && m_VerticalSpeed < 0.0f;
+        m_Animator.SetBool("IsFalling", l_IsFalling);
+        m_Animator.SetBool("IsGrounded", l_IsGrounded);
+
         l_Movement.y=m_VerticalSpeed*Time.deltaTime;
         CollisionFlags l_CollisionFlags = m_CharacterController.Move(l_Movement);
         if ((l_CollisionFlags & CollisionFlags.CollidedBelow) != 0 && m_VerticalSpeed < 0.0f)
@@ -170,12 +191,26 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     bool CanJump()
     {
-        return true;
+        return m_CharacterController.isGrounded;    
     }
 
     void Jump()
     {
-        m_VerticalSpeed = m_jumpSpeed;
+        float l_DiffJumpTime=Time.time-m_LastJumpTime;
+        if(l_DiffJumpTime<m_MaxTimeToComboJump && m_CurrentJumpId < 2)
+            m_CurrentJumpId=m_CurrentJumpId+1;
+        else
+            m_CurrentJumpId=0;
+        m_LastJumpTime=Time.time;
+        m_Animator.SetTrigger("Jump");
+        m_Animator.SetInteger("JumpId", m_CurrentJumpId);  
+
+        if(m_CurrentJumpId==0)
+            m_VerticalSpeed = m_jumpSpeed;
+        else if(m_CurrentJumpId==1)
+            m_VerticalSpeed = m_DoubleJumpSpeed;
+        else if(m_CurrentJumpId==2)
+            m_VerticalSpeed = m_TripleJumpSpeed;
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
