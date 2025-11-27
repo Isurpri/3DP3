@@ -1630,7 +1630,7 @@ MonoBehaviour:
   m_TripleJumpSpeed: 10
   m_KilljumpSpeed: 4
   m_MaxAngleToKillGoomba: 30
-  m_MaxTimeToComboJump: 2
+  m_MaxTimeToComboJump: 1.8
   m_MaxTimeToComboPunch: 0.8
   m_RightHandPunchCollider: {fileID: 386369646}
   m_LeftHandPunchCollider: {fileID: 845284686}
