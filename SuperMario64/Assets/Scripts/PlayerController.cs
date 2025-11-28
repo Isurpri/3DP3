@@ -18,9 +18,10 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     public Transform m_LookAt;
     [Range(0.0f, 1.0f)] public float m_RotationLerpPct = 0.8f;
     public float m_DampTime = 0.2f;
+    Checkpoint m_CurrentCheckpoint;
 
     [Header("UI")]
-    public int m_Life = 8;
+   
     public int m_maxLife;
     public int coins = 0;
 
@@ -51,11 +52,22 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     [Header("Elevator")]
     Collider m_ElevatorCollider;
     public float m_MaxAngleToAttachElevator = 30.0f;
+    
+    [Header("Bridge")]
+    public float m_BridgeHitForce = 10.0f;
 
     [Header("Audio")]
     public AudioSource m_footRightStepAudio;
     public AudioSource m_footLeftStepAudio;
     
+    [Header("GoombaHit")]
+    public float m_TimeHit = 1.0f;
+    bool m_HitRecived = false;
+
+    CoinsController m_CoinsController=new CoinsController();
+    LifeController m_LifeController=new LifeController();
+
+
     private void Awake()
     {
         m_CharacterController=GetComponent<CharacterController>();
@@ -63,7 +75,6 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     void Start()
     {
-        m_maxLife = m_Life;
         m_LastPunchTime=-m_MaxTimeToComboPunch;
         m_RightHandPunchCollider.SetActive(false);
         m_LeftHandPunchCollider.SetActive(false);
@@ -140,14 +151,15 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         else if((l_CollisionFlags & CollisionFlags.CollidedAbove) !=0 && m_VerticalSpeed>0.0f)
             m_VerticalSpeed = 0.0f;
 
-            UpdatePucnh();
+            UpdatePunch();
+            UpdateTimeHit(m_HitRecived);
     }
     private void LateUpdate()
     {
         UpdateElevator();
     }
  
-    void UpdatePucnh()
+    void UpdatePunch()
     {
         if(CanPunch() && Input.GetMouseButtonDown(m_PunchMouseButton))
             Punch();
@@ -180,6 +192,12 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
    public void RestartGame()
     {
+        if(m_CurrentCheckpoint!=null)
+        {
+            m_StartPosition=m_CurrentCheckpoint.m_RestartPosition.position;
+            m_StartRotation=m_CurrentCheckpoint.m_RestartPosition.rotation;
+            
+        }
         m_CharacterController.enabled = false;
         transform.position=m_StartPosition;
         transform.rotation=m_StartRotation;
@@ -223,11 +241,17 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
                 l_GoombaEnemy.Kill();
                 JumpOverEnemy();
             }
+            else if(hit.collider.CompareTag("Bridge"))
+            {
+                hit.rigidbody.AddForceAtPosition(-hit.normal*m_BridgeHitForce, hit.point);
+            }
             else
             {
-                if(l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL)
+                if(l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL && m_TimeHit >= 1.0f)
                 {
                     Hit();
+                    UpdateTimeHit(m_HitRecived);
+                    m_HitRecived = true;
                 }
             }
             Debug.DrawRay(hit.point, hit.normal, Color.red, 5.0f);
@@ -263,6 +287,10 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
             {
                 AttachElevator(other);
             }
+        }
+        else if (other.CompareTag("Checkpoint"))
+        {
+            m_CurrentCheckpoint = other.GetComponent<Checkpoint>();
         }
         else if (other.CompareTag("Item"))
         {
@@ -309,24 +337,24 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         if(m_ElevatorCollider!=null)
             UpdateUpElevator();
     }
-
-    public void AddCoin(int coin)
+    public void AddCoin()
     {
-        coins += coin;
-        GameManager.GetGameManager().m_GameUI.SetCoins(coins);
-        GameManager.GetGameManager().m_GameUI.ShowUI();
+        m_CoinsController.AddCoins(1);
     }
-    public void AddHealth(int Health)
-    {
-        m_Life += Health;
-        GameManager.GetGameManager().m_GameUI.SetLifeBar(m_Life / 8.0f);
-        GameManager.GetGameManager().m_GameUI.ShowUI();
-    }
+    
     public void Hit()
     {
-        --m_Life;
-        GameManager.GetGameManager().m_GameUI.SetLifeBar(m_Life/8.0f);
-        GameManager.GetGameManager().m_GameUI.ShowUI();
+        m_LifeController.AddLife(-1);
     }
+    public void UpdateTimeHit(bool Hit)
+    {
+        m_TimeHit += Time.deltaTime;
+
+        if(Hit == true)
+        {
+            m_TimeHit = 0;
+        }
+    }
+
 
 }

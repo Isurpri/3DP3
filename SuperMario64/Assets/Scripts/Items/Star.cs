@@ -6,11 +6,11 @@ public class Star : Item
     public override void Pick()
     {
         base.Pick();
-        GameManager.GetGameManager().GetPlayer().AddHealth(m_Health);
+        GameManager.GetGameManager().GetComponent<LifeController>().AddLife(1);
     }
     public override bool CanPick()
     {
-        if (GameManager.GetGameManager().GetPlayer().m_Life >= GameManager.GetGameManager().GetPlayer().m_maxLife)
+        if (GameManager.GetGameManager().GetComponent<LifeController>().GetValue() >= GameManager.GetGameManager().GetPlayer().m_maxLife)
         {
             return false;
         }

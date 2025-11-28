@@ -6,7 +6,7 @@ public class Coin : Item
     public override void Pick()
     {
         base.Pick();
-        GameManager.GetGameManager().GetPlayer().AddCoin(m_Coin);
+        GameManager.GetGameManager().GetComponent<CoinsController>().AddCoins(1);
     }
     public override bool CanPick()
     {

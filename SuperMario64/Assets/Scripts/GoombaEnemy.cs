@@ -210,7 +210,7 @@
         void MoveToNextPatrolPosition()
         {
             Vector3 l_Destination=m_PatrolPosition[m_currentPatrolPos].position;
-            m_NavMeshAgent.destination= l_Destination;
+            m_NavMeshAgent.destination = l_Destination;
             ++m_currentPatrolPos;
             if (m_currentPatrolPos>=m_PatrolPosition.Count)
             {
