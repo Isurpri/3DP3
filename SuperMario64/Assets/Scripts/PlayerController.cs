@@ -311,13 +311,12 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
  
     bool CanAttachElevator(Collider ElevatorCollider) 
     {
-
         return Vector3.Dot(ElevatorCollider.transform.up, Vector3.up)> Mathf.Cos(m_MaxAngleToAttachElevator*Mathf.Deg2Rad);
     }
     void AttachElevator(Collider ElevatorCollider)
     {
         transform.SetParent(ElevatorCollider.transform.parent);
-        m_ElevatorCollider= ElevatorCollider;
+        m_ElevatorCollider = ElevatorCollider;
     }
     void DetachElevator()
     {
