@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 public class PlayerController : MonoBehaviour, IRestartGameElement
 {
@@ -241,20 +242,30 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
                 l_GoombaEnemy.Kill();
                 JumpOverEnemy();
             }
-            else if(hit.collider.CompareTag("Bridge"))
-            {
-                hit.rigidbody.AddForceAtPosition(-hit.normal*m_BridgeHitForce, hit.point);
-            }
             else
             {
                 if(l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL && m_TimeHit >= 1.0f)
                 {
                     Hit();
-                    UpdateTimeHit(m_HitRecived);
                     m_HitRecived = true;
+                    UpdateTimeHit(m_HitRecived);
+                    m_HitRecived = false;
                 }
             }
             Debug.DrawRay(hit.point, hit.normal, Color.red, 5.0f);
+        }
+        else if(hit.collider.CompareTag("Bridge"))
+        {
+            hit.rigidbody.AddForceAtPosition(-hit.normal*m_BridgeHitForce, hit.point);
+        }
+        else if(hit.collider.CompareTag("Lava"))
+        {
+            m_LifeController.AddLife(-8);            
+        }
+
+        if(!m_CharacterController.isGrounded && hit.normal.y < 0.1f)
+        {
+            
         }
     }
     void JumpOverEnemy()
@@ -347,12 +358,19 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     public void UpdateTimeHit(bool Hit)
     {
-        m_TimeHit += Time.deltaTime;
-
         if(Hit == true)
         {
             m_TimeHit = 0;
+          
         }
+
+        m_TimeHit += Time.deltaTime;
+
+        if(m_TimeHit > 2.0f)
+        {
+            m_TimeHit = 2.0f;
+        }
+
     }
 
 
