@@ -42,6 +42,13 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     public float m_MaxTimeToComboJump = 0.5f; 
     int m_CurrentJumpId = 0;
     float m_LastJumpTime;
+    [Header("Wall Jump")]
+    public float m_WallJumpForce = 8.0f;
+    public float m_WallJumpUpForce = 7.0f;
+    public float m_WallCheckAngle = 70.0f;
+
+    bool m_IsTouchingWall = false;
+    Vector3 m_LastWallNormal;
 
     [Header ("Punch")]
     public float m_MaxTimeToComboPunch=0.8f;
@@ -134,6 +141,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         bool l_IsGrounded = m_CharacterController.isGrounded;
         if (l_IsGrounded)
         {
+            m_IsTouchingWall = false;
             float l_DiffJumpTime = Time.time - m_LastJumpTime;
             if (m_CurrentJumpId > 0 && l_DiffJumpTime >= m_MaxTimeToComboJump)
             {
@@ -229,7 +237,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     bool CanJump()
     {
-        return m_CharacterController.isGrounded;    
+        return m_CharacterController.isGrounded || m_IsTouchingWall;;    
     }
 
     void Jump()
@@ -249,6 +257,23 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
             m_VerticalSpeed = m_DoubleJumpSpeed;
         else if(m_CurrentJumpId==2)
             m_VerticalSpeed = m_TripleJumpSpeed;
+
+        if (!m_CharacterController.isGrounded && m_IsTouchingWall)
+        {
+            Vector3 wallJumpDir = m_LastWallNormal;
+            wallJumpDir.y = 0;
+            wallJumpDir.Normalize();
+
+            
+            m_VerticalSpeed = m_WallJumpUpForce;
+
+            m_CurrentJumpId = 0;
+            m_Animator.SetTrigger("Jump");
+            m_Animator.SetInteger("JumpId", 0);
+
+            m_IsTouchingWall = false;
+            return;
+        }
     }
     private void OnControllerColliderHit(ControllerColliderHit hit)
     {
@@ -274,11 +299,15 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         {
             m_LifeController.AddLife(-8);            
         }
-
-        if(!m_CharacterController.isGrounded && hit.normal.y < 0.1f)
+        
+        float l_Wall = Vector3.Dot(hit.normal, Vector3.up);
+        
+        if (l_Wall < Mathf.Cos(m_WallCheckAngle * Mathf.Deg2Rad))
         {
-            
+            m_IsTouchingWall = true;
+            m_LastWallNormal = hit.normal;
         }
+
     }
     void JumpOverEnemy()
     {
