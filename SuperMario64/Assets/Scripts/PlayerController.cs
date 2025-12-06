@@ -242,16 +242,19 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
                 l_GoombaEnemy.Kill();
                 JumpOverEnemy();
             }
-            else
-            {
-                if(l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL && m_TimeHit >= 1.0f)
+            //else
+            //{
+            //    Debug.Log("No entra2");
+
+                if (l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL && m_TimeHit >= 1.0f)
                 {
+                    Debug.Log("No entra");
                     Hit();
                     m_HitRecived = true;
                     UpdateTimeHit(m_HitRecived);
                     m_HitRecived = false;
                 }
-            }
+            //}
             Debug.DrawRay(hit.point, hit.normal, Color.red, 5.0f);
         }
         else if(hit.collider.CompareTag("Bridge"))
@@ -276,18 +279,22 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
 
     public void Step(AnimationEvent _AnimEvent)
     {
-        AudioSource l_CurrentAudioSource=null;
+        if (m_Animator.GetFloat("Speed") < 0.1f)
+            return;
+
+        AudioSource l_CurrentAudioSource = null;
+
         if (_AnimEvent.stringParameter == "Left")
         {
-            l_CurrentAudioSource=m_footLeftStepAudio;
+            l_CurrentAudioSource = m_footLeftStepAudio;
         }
         else if (_AnimEvent.stringParameter == "Right")
         {
             l_CurrentAudioSource = m_footRightStepAudio;
         }
 
-        AudioClip l_AudioClip=(AudioClip)_AnimEvent.objectReferenceParameter;
-        l_CurrentAudioSource.clip=l_AudioClip;
+        AudioClip l_AudioClip = (AudioClip)_AnimEvent.objectReferenceParameter;
+        l_CurrentAudioSource.clip = l_AudioClip;
         l_CurrentAudioSource.Play();
     }
     private void OnTriggerEnter(Collider other)
@@ -354,6 +361,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     
     public void Hit()
     {
+        Debug.Log("Quita vida");
         m_LifeController.AddLife(-1);
     }
     public void UpdateTimeHit(bool Hit)
