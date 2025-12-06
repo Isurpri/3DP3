@@ -1,4 +1,5 @@
-    using System.Collections.Generic;
+using System.Collections;
+using System.Collections.Generic;
     using Unity.VisualScripting;
     using UnityEngine;
     using UnityEngine.AI;
@@ -43,6 +44,7 @@
 
 
         [Header("Hit")]
+        public float m_pushForce = 100.0f;
         private float m_HitDuration = 0.5f;
         private float m_HitTimer = 0f;
         public ParticleSystem m_HitParticles;
@@ -266,4 +268,6 @@
         {
             gameObject.SetActive(false);
         }
-    }
+
+    
+}

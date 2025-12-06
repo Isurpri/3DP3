@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices.WindowsRuntime;
+using UnityEditor.Build.Content;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class GameManager : MonoBehaviour
 {
@@ -8,6 +11,8 @@ public class GameManager : MonoBehaviour
     public List<IRestartGameElement> m_RestartGameElements=new List<IRestartGameElement>();
     public GameUI m_GameUI;
     public PlayerController m_Player;
+    public Fade m_fade;
+
     void Awake()
     {
         if(m_GameManager!=null)
@@ -30,8 +35,9 @@ public class GameManager : MonoBehaviour
     {
         if(Input.GetKeyDown(KeyCode.R))
             RestartGame();
-        //if (Input.GetKeyDown(KeyCode.H))
-           // m_Player.Hit();Debug.Log("Pulsado");
+        if (Input.GetKeyDown(KeyCode.H))
+            GameOver();
+            //m_Player.Hit();
        // if (Input.GetKeyDown(KeyCode.C))
           //  m_Player.AddCoin();
     }
@@ -47,5 +53,17 @@ public class GameManager : MonoBehaviour
     {
         foreach(IRestartGameElement l_RestartGameElement in m_RestartGameElements)
             l_RestartGameElement.RestartGame();
+        m_fade.FadeOut(() =>
+        {
+            m_fade.gameObject.SetActive(false);
+        });
+    }
+    public void GameOver()
+    {
+        SceneManager.LoadScene("GameOver");
+        m_fade.FadeOut(() =>
+        {
+            m_fade.gameObject.SetActive(false);
+        });
     }
 }

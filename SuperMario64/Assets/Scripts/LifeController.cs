@@ -13,8 +13,16 @@ public class LifeController
 
     public void AddLife(int Life)
     {
-        m_Life += Life;
-        m_OnLifeChanged.Invoke(this);
+        if (m_Life > 0)
+        {
+            m_Life += Life;
+            m_OnLifeChanged.Invoke(this);
+        }
+        else if (m_Life >= 0)
+        {
+            m_Life = 0; ;
+        }
+       
     }
     public int GetValue()
     {

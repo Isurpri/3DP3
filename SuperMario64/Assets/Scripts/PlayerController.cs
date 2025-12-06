@@ -1,3 +1,5 @@
+using System.Collections;
+using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
 public class PlayerController : MonoBehaviour, IRestartGameElement
@@ -46,13 +48,13 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     public GameObject m_LeftHandPunchCollider;
     public GameObject m_KickCollider;
 
+    [Header ("Elevator")]
+    public float m_MaxAngleToAttachElevator = 30.0f;
+    Collider m_ElevatorCollider;
 
     [Header ("Input")]
     public int m_PunchMouseButton=0;
 
-    [Header("Elevator")]
-    Collider m_ElevatorCollider;
-    public float m_MaxAngleToAttachElevator = 30.0f;
     
     [Header("Bridge")]
     public float m_BridgeHitForce = 10.0f;
@@ -86,39 +88,41 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     void Update()
     {
+
+        m_TimeHit += Time.deltaTime;
         Vector3 l_Right = m_Camera.transform.right;
         Vector3 l_Forward = m_Camera.transform.forward;
         Vector3 l_Movement = Vector3.zero;
-        
-        l_Right.y=0;
+
+        l_Right.y = 0;
         l_Right.Normalize();
-        l_Forward.y=0;
+        l_Forward.y = 0;
         l_Forward.Normalize();
 
-        if(Input.GetKey(KeyCode.D))
-            l_Movement=l_Right;
+        if (Input.GetKey(KeyCode.D))
+            l_Movement = l_Right;
         else if (Input.GetKey(KeyCode.A))
-            l_Movement=-l_Right;
-        if(Input.GetKey(KeyCode.W))
-            l_Movement+=l_Forward;
+            l_Movement = -l_Right;
+        if (Input.GetKey(KeyCode.W))
+            l_Movement += l_Forward;
         else if (Input.GetKey(KeyCode.S))
-            l_Movement-=l_Forward;
+            l_Movement -= l_Forward;
 
         l_Movement.Normalize();
 
         float l_SpeedAnimatorValue = 0.5f;
         float l_Speed = m_WalkSpeed;
-        if(Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(KeyCode.LeftShift))
         {
             l_Speed = m_RunSpeed;
             l_SpeedAnimatorValue = 1.0f;
         }
-        if(l_Movement.sqrMagnitude==0.0f)
-            m_Animator.SetFloat("Speed",0.0f, m_DampTime, Time.deltaTime);
+        if (l_Movement.sqrMagnitude == 0.0f)
+            m_Animator.SetFloat("Speed", 0.0f, m_DampTime, Time.deltaTime);
         else
         {
             m_Animator.SetFloat("Speed", l_SpeedAnimatorValue, m_DampTime, Time.deltaTime);
-            transform.rotation=Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(l_Movement), m_RotationLerpPct);
+            transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(l_Movement), m_RotationLerpPct);
         }
 
         bool l_IsGrounded = m_CharacterController.isGrounded;
@@ -127,33 +131,37 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
             float l_DiffJumpTime = Time.time - m_LastJumpTime;
             if (m_CurrentJumpId > 0 && l_DiffJumpTime >= m_MaxTimeToComboJump)
             {
-                m_CurrentJumpId = 0; 
+                m_CurrentJumpId = 0;
                 m_Animator.SetInteger("JumpId", m_CurrentJumpId);
             }
         }
         if (Input.GetKey(m_Keyjump))
         {
-            if(CanJump())
+            if (CanJump())
                 Jump();
         }
 
-        l_Movement*=l_Speed*Time.deltaTime;
-        m_VerticalSpeed+=Physics.gravity.y*Time.deltaTime;
-        
+        l_Movement *= l_Speed * Time.deltaTime;
+        m_VerticalSpeed += Physics.gravity.y * Time.deltaTime;
+
         bool l_IsFalling = !m_CharacterController.isGrounded && m_VerticalSpeed < 0.0f;
         m_Animator.SetBool("IsFalling", l_IsFalling);
         m_Animator.SetBool("IsGrounded", l_IsGrounded);
 
-        l_Movement.y=m_VerticalSpeed*Time.deltaTime;
+        l_Movement.y = m_VerticalSpeed * Time.deltaTime;
         CollisionFlags l_CollisionFlags = m_CharacterController.Move(l_Movement);
         if ((l_CollisionFlags & CollisionFlags.CollidedBelow) != 0 && m_VerticalSpeed < 0.0f)
-            if (m_VerticalSpeed <0)
+            if (m_VerticalSpeed < 0)
                 m_VerticalSpeed = -2.0f;
-        else if((l_CollisionFlags & CollisionFlags.CollidedAbove) !=0 && m_VerticalSpeed>0.0f)
-            m_VerticalSpeed = 0.0f;
+            else if ((l_CollisionFlags & CollisionFlags.CollidedAbove) != 0 && m_VerticalSpeed > 0.0f)
+                m_VerticalSpeed = 0.0f;
 
-            UpdatePunch();
-            UpdateTimeHit(m_HitRecived);
+        UpdatePunch();
+        UpdateTimeHit(m_HitRecived);
+        if (m_LifeController.m_Life <= 0)
+        {
+            Kill();
+        }
     }
     private void LateUpdate()
     {
@@ -236,27 +244,18 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     {
         if (hit.collider.CompareTag("Goomba"))
         {
-            GoombaEnemy l_GoombaEnemy = hit.collider.GetComponent<GoombaEnemy>();
+            GoombaEnemy goomba = hit.collider.GetComponent<GoombaEnemy>();
+
+            // Si lo matas cayendo encima
             if (CanKillWithFeet(hit))
             {
-                l_GoombaEnemy.Kill();
+                goomba.Kill();
                 JumpOverEnemy();
             }
-            //else
-            //{
-            //    Debug.Log("No entra2");
-
-                if (l_GoombaEnemy.m_state == GoombaEnemy.TStates.ATTACK || l_GoombaEnemy.m_state == GoombaEnemy.TStates.PATROL && m_TimeHit >= 1.0f)
-                {
-                    Debug.Log("No entra");
-                    Hit();
-                    m_HitRecived = true;
-                    UpdateTimeHit(m_HitRecived);
-                    m_HitRecived = false;
-                }
-            //}
             Debug.DrawRay(hit.point, hit.normal, Color.red, 5.0f);
+
         }
+
         else if(hit.collider.CompareTag("Bridge"))
         {
             hit.rigidbody.AddForceAtPosition(-hit.normal*m_BridgeHitForce, hit.point);
@@ -299,6 +298,23 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     private void OnTriggerEnter(Collider other)
     {
+        if (other.CompareTag("Goomba"))
+        {
+            GoombaEnemy goomba = other.GetComponent<GoombaEnemy>();
+            if (goomba.m_state == GoombaEnemy.TStates.ATTACK ||
+                    goomba.m_state == GoombaEnemy.TStates.PATROL)
+            {
+                if (m_TimeHit >= 1.0f)
+                {
+                    Vector3 l_goombaDirection = goomba.transform.forward;
+                    l_goombaDirection.y = 0;
+                    //Debug.Log("Golpe");
+                    Hit();
+                    m_TimeHit = 0;
+                    StartCoroutine(PushByGoomba(l_goombaDirection, goomba.m_pushForce));
+                }
+            }
+        }
         if (other.CompareTag("Elevator"))
         {
             if (CanAttachElevator(other))
@@ -317,6 +333,17 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
             {
                 l_Item.Pick();
             }
+        }
+    }
+    IEnumerator PushByGoomba(Vector3 directiontoPush, float force)
+    {
+        float duration = 0.5f;
+        float timer = 0;
+        while (timer < duration)
+        {
+            m_CharacterController.Move(directiontoPush * force * Time.deltaTime);
+            timer += Time.deltaTime;
+            yield return null;
         }
     }
     private void OnTriggerExit(Collider other)
@@ -361,8 +388,15 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     
     public void Hit()
     {
-        Debug.Log("Quita vida");
+        //Debug.Log("Quita vida");
         m_LifeController.AddLife(-1);
+    }
+    public void Kill()
+    {
+        //GameManager.GetGameManager().m_fade.FadeIn(() =>
+        //{
+        GameManager.GetGameManager().GameOver();
+        //});
     }
     public void UpdateTimeHit(bool Hit)
     {
