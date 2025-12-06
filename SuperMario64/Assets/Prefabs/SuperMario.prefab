@@ -637,6 +637,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: SuperMario
       objectReference: {fileID: 0}
+    - target: {fileID: 100098, guid: 2c49a169fa02b2545921fcc829011ecb, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 400098, guid: 2c49a169fa02b2545921fcc829011ecb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 35.67
@@ -816,9 +820,9 @@ MonoBehaviour:
   m_RightHandPunchCollider: {fileID: 1330928199450229511}
   m_LeftHandPunchCollider: {fileID: 7070031219934622163}
   m_KickCollider: {fileID: 5167643621153039100}
-  m_PunchMouseButton: 0
   m_MaxAngleToAttachElevator: 30
-  m_BridgeHitForce: 10
+  m_PunchMouseButton: 0
+  m_BridgeHitForce: 2
   m_footRightStepAudio: {fileID: 5321576050781209138}
   m_footLeftStepAudio: {fileID: 2752265318462512226}
   m_TimeHit: 1

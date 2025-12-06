@@ -44,7 +44,7 @@ using System.Collections.Generic;
 
 
         [Header("Hit")]
-        public float m_pushForce = 100.0f;
+        public float m_pushForce = 5.0f;
         private float m_HitDuration = 0.5f;
         private float m_HitTimer = 0f;
         public ParticleSystem m_HitParticles;

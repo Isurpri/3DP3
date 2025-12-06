@@ -2,6 +2,7 @@ using System.Collections;
 using Unity.Burst.CompilerServices;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 public class PlayerController : MonoBehaviour, IRestartGameElement
 {
     public enum TPunchType
@@ -11,6 +12,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         KICK
     }
     public Camera m_Camera;
+
     CharacterController m_CharacterController;
     Animator m_Animator;
     Vector3 m_StartPosition;
@@ -27,7 +29,8 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
    
     public int m_maxLife;
     public int coins = 0;
-
+    int m_InitialLife;
+    int m_InitialCoins;
 
     [Header("Jump")]
     public KeyCode m_Keyjump= KeyCode.Space;
@@ -78,16 +81,19 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     void Start()
     {
-        m_LastPunchTime=-m_MaxTimeToComboPunch;
+        m_InitialLife = m_LifeController.m_Life;
+        m_InitialCoins = coins;
+        m_LastPunchTime =-m_MaxTimeToComboPunch;
         m_RightHandPunchCollider.SetActive(false);
         m_LeftHandPunchCollider.SetActive(false);
         m_KickCollider.SetActive(false);
         m_StartPosition=transform.position;
         m_StartRotation=transform.rotation;
-        //GameManager.GetGameManager().AddRestartGameElement(this);
+        GameManager.GetGameManager().AddRestartGameElement(this);
     }
     void Update()
     {
+        
 
         m_TimeHit += Time.deltaTime;
         Vector3 l_Right = m_Camera.transform.right;
@@ -199,17 +205,21 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         else if(PunchType==TPunchType.KICK)
             m_KickCollider.SetActive(Active);
     }
-   public void RestartGame()
+    public void RestartGame()
     {
-        if(m_CurrentCheckpoint!=null)
+        if (m_CurrentCheckpoint != null)
         {
-            m_StartPosition=m_CurrentCheckpoint.m_RestartPosition.position;
-            m_StartRotation=m_CurrentCheckpoint.m_RestartPosition.rotation;
-            
+            m_StartPosition = m_CurrentCheckpoint.m_RestartPosition.position;
+            m_StartRotation = m_CurrentCheckpoint.m_RestartPosition.rotation;
         }
+
+        m_LifeController.SetLife(m_InitialLife);
+
+        coins = m_InitialCoins;
+
         m_CharacterController.enabled = false;
-        transform.position=m_StartPosition;
-        transform.rotation=m_StartRotation;
+        transform.position = m_StartPosition;
+        transform.rotation = m_StartRotation;
         m_CharacterController.enabled = true;
     }
     bool CanKillWithFeet(ControllerColliderHit hit)

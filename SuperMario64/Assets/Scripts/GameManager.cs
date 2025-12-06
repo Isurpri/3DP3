@@ -10,11 +10,13 @@ public class GameManager : MonoBehaviour
     static GameManager m_GameManager;
     public List<IRestartGameElement> m_RestartGameElements=new List<IRestartGameElement>();
     public GameUI m_GameUI;
+    public GameObject m_GameOver;
     public PlayerController m_Player;
     public Fade m_fade;
 
     void Awake()
     {
+        m_GameOver.SetActive(false);
         if(m_GameManager!=null)
         {
             GameObject.Destroy(gameObject);
@@ -51,8 +53,11 @@ public class GameManager : MonoBehaviour
     }
     public void RestartGame()
     {
-        foreach(IRestartGameElement l_RestartGameElement in m_RestartGameElements)
+        m_GameOver.SetActive(false);
+
+        foreach (IRestartGameElement l_RestartGameElement in m_RestartGameElements)
             l_RestartGameElement.RestartGame();
+
         m_fade.FadeOut(() =>
         {
             m_fade.gameObject.SetActive(false);
@@ -60,7 +65,8 @@ public class GameManager : MonoBehaviour
     }
     public void GameOver()
     {
-        SceneManager.LoadScene("GameOver");
+        m_GameOver.SetActive(true);
+        //SceneManager.LoadScene("GameOver");
         m_fade.FadeOut(() =>
         {
             m_fade.gameObject.SetActive(false);
