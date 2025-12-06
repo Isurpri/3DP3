@@ -30,8 +30,8 @@ public class GameManager : MonoBehaviour
     {
         if(Input.GetKeyDown(KeyCode.R))
             RestartGame();
-        if (Input.GetKeyDown(KeyCode.H))
-            m_Player.Hit();Debug.Log("Pulsado");
+        //if (Input.GetKeyDown(KeyCode.H))
+           // m_Player.Hit();Debug.Log("Pulsado");
        // if (Input.GetKeyDown(KeyCode.C))
           //  m_Player.AddCoin();
     }
