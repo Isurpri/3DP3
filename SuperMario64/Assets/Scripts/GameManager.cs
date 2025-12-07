@@ -25,6 +25,10 @@ public class GameManager : MonoBehaviour
         m_GameManager=this;
         DontDestroyOnLoad(gameObject);
     }
+    private void Start()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+    }
     public static GameManager GetGameManager()
     {
         return m_GameManager;   
@@ -66,10 +70,17 @@ public class GameManager : MonoBehaviour
     public void GameOver()
     {
         m_GameOver.SetActive(true);
+        Cursor.lockState = CursorLockMode.None;
+
         //SceneManager.LoadScene("GameOver");
         m_fade.FadeOut(() =>
         {
             m_fade.gameObject.SetActive(false);
         });
+    }
+    public void ButtonRestart()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
+        RestartGame();
     }
 }

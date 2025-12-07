@@ -14,7 +14,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     public Camera m_Camera;
 
     CharacterController m_CharacterController;
-    Animator m_Animator;
+    public Animator m_Animator;
     Vector3 m_StartPosition;
     Quaternion m_StartRotation;
     public float m_RunSpeed;
