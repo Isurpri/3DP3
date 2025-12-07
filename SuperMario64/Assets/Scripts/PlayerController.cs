@@ -27,7 +27,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
 
     [Header("UI")]
    
-    public int m_maxLife;
+    public int m_maxLife = 8;
     public int coins = 0;
     int m_InitialLife;
     int m_InitialCoins;
@@ -72,7 +72,11 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     [Header("Audio")]
     public AudioSource m_footRightStepAudio;
     public AudioSource m_footLeftStepAudio;
-    
+    public AudioSource m_firstJumpAudio;
+    public AudioSource m_secondJumpAudio;
+    public AudioSource m_thirsJumpAudio;
+    public AudioSource m_hitAudio;
+    public AudioSource m_dieAudio;
     [Header("GoombaHit")]
     public float m_TimeHit = 1.0f;
     bool m_HitRecived = false;
@@ -206,8 +210,10 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     }
     public void SetActivePunch(TPunchType PunchType, bool Active)
     {
-        if(PunchType==TPunchType.RIGHT_HAND)
-            m_RightHandPunchCollider.SetActive(Active); 
+        if (PunchType == TPunchType.RIGHT_HAND)
+        {
+            m_RightHandPunchCollider.SetActive(Active);
+        }
         else if(PunchType==TPunchType.LEFT_HAND)
             m_LeftHandPunchCollider.SetActive(Active); 
         else if(PunchType==TPunchType.KICK)
@@ -249,14 +255,24 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
             m_CurrentJumpId=0;
         m_LastJumpTime=Time.time;
         m_Animator.SetTrigger("Jump");
-        m_Animator.SetInteger("JumpId", m_CurrentJumpId);  
+        m_Animator.SetInteger("JumpId", m_CurrentJumpId);
 
-        if(m_CurrentJumpId==0)
+        if (m_CurrentJumpId == 0)
+        {
+            m_firstJumpAudio.Play();
             m_VerticalSpeed = m_jumpSpeed;
-        else if(m_CurrentJumpId==1)
+        }
+        else if (m_CurrentJumpId == 1)
+        {
+            m_secondJumpAudio.Play();
             m_VerticalSpeed = m_DoubleJumpSpeed;
-        else if(m_CurrentJumpId==2)
+        }
+        else if (m_CurrentJumpId == 2)
+        {
+            m_thirsJumpAudio.Play();
             m_VerticalSpeed = m_TripleJumpSpeed;
+
+        }
 
         if (!m_CharacterController.isGrounded && m_IsTouchingWall)
         {
@@ -314,7 +330,7 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         m_VerticalSpeed = m_KilljumpSpeed;
 
     }
-
+ 
     public void Step(AnimationEvent _AnimEvent)
     {
         if (m_Animator.GetFloat("Speed") < 0.1f)
@@ -335,6 +351,8 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         l_CurrentAudioSource.clip = l_AudioClip;
         l_CurrentAudioSource.Play();
     }
+    
+    
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Goomba"))
@@ -356,9 +374,10 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         }
         if (other.CompareTag("Elevator"))
         {
-            if (CanAttachElevator(other))
+            if (CanAttachToElevator(other))
             {
-                AttachElevator(other);
+                AttachToElevator(other);
+
             }
         }
         else if (other.CompareTag("Checkpoint"))
@@ -388,38 +407,37 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Elevator"))
-        {
-            DetachElevator();
-        }
+            DetachFromElevator();
     }
- 
-    bool CanAttachElevator(Collider ElevatorCollider) 
+
+    bool CanAttachToElevator(Collider other)
     {
-        return Vector3.Dot(ElevatorCollider.transform.up, Vector3.up)> Mathf.Cos(m_MaxAngleToAttachElevator*Mathf.Deg2Rad);
+        float l_Dot = Vector3.Dot(other.transform.up, Vector3.up);
+        return l_Dot > Mathf.Cos(m_MaxAngleToAttachElevator * Mathf.Deg2Rad);
     }
-    void AttachElevator(Collider ElevatorCollider)
+
+    void AttachToElevator(Collider other)
     {
-        transform.SetParent(ElevatorCollider.transform.parent);
-        m_ElevatorCollider = ElevatorCollider;
+        transform.SetParent(other.transform.parent);
+        m_ElevatorCollider = other;
     }
-    void DetachElevator()
+    void DetachFromElevator()
     {
         transform.SetParent(null);
-        UpdateUpElevator();
         m_ElevatorCollider = null;
-    }
-    void UpdateUpElevator()
-    {
-        Vector3 l_direction = transform.forward;
-        l_direction.y = 0.0f;
-        l_direction.Normalize();
-        transform.rotation=Quaternion.LookRotation(l_direction,Vector3.up);
     }
     void UpdateElevator()
     {
-        if(m_ElevatorCollider!=null)
-            UpdateUpElevator();
+        if (m_ElevatorCollider != null)
+        {
+            Vector3 l_Direction = transform.forward;
+            l_Direction.y = 0.0f;
+            l_Direction.Normalize();
+            transform.rotation = Quaternion.LookRotation(l_Direction, Vector3.up);
+        }
     }
+ 
+   
     public void AddCoin()
     {
         m_CoinsController.AddCoins(1);
@@ -428,7 +446,13 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
     public void Hit()
     {
         //Debug.Log("Quita vida");
+        m_Animator.SetTrigger("Hit");
+        m_hitAudio.Play();
         m_LifeController.AddLife(-1);
+        /*if (m_LifeController.m_Life ==0)
+        {
+            m_dieAudio.Play();
+        }*/
     }
     public void Kill()
     {
@@ -453,6 +477,4 @@ public class PlayerController : MonoBehaviour, IRestartGameElement
         }
 
     }
-
-
 }

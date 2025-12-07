@@ -9,7 +9,7 @@ using System.Collections.Generic;
         public enum TStates
         {
             PATROL=0,
-            ALERT,
+            //ALERT,
             ATTACK,
             HIT,
             DIE
@@ -75,15 +75,15 @@ using System.Collections.Generic;
                 case TStates.PATROL:
                     UpdatePatrolState(); 
                     break;
-                case TStates.ALERT:
-                    UpdateAlertState();
-                    break;
+                //case TStates.ALERT:
+                //    UpdateAlertState();
+                //    break;
                 case TStates.ATTACK:
                     UpdateAttackState(); 
                     break;
-                case TStates.HIT:
-                    UpdateHitState();
-                    break;
+                //case TStates.HIT:
+                //    UpdateHitState();
+                //    break;
                 case TStates.DIE:
                     UpdateDieState();
                     break;
@@ -104,17 +104,17 @@ using System.Collections.Generic;
                 m_NavMeshAgent.isStopped=false;
             }
             if(SeePlayer() || HearsPlayer())
-                SetAlertState();
+            SetAttackState();
                 
         }
-        void SetAlertState()
-        {
-            ChangeState(TStates.ALERT);
-            m_AlertTimer=0.0f;
-            m_NavMeshAgent.isStopped = true;
-            m_NavMeshAgent.ResetPath();
+        //void SetAlertState()
+        //{
+        //    ChangeState(TStates.ALERT);
+        //    m_AlertTimer=0.0f;
+        //    m_NavMeshAgent.isStopped = true;
+        //    m_NavMeshAgent.ResetPath();
 
-        }
+        //}
         void UpdateAlertState()
         {
             Vector3 l_PlayerPosition = m_target.position;
@@ -147,13 +147,13 @@ using System.Collections.Generic;
                 SetPatrolState();
                 return;
             }
-            if (!SeePlayer() && !HearsPlayer())
-            {
-                SetAlertState();
-                return;
-            }
+        if (!SeePlayer() && !HearsPlayer())
+        {
+            SetPatrolState();
+            return;
+        }
 
-            if (l_Distance <= m_MaxDistanceToAttack)
+        if (l_Distance <= m_MaxDistanceToAttack)
             {
                 m_NavMeshAgent.isStopped = false; 
                 FaceTarget(l_PlayerPosition);     
@@ -169,27 +169,27 @@ using System.Collections.Generic;
             m_NavMeshAgent.isStopped = true;
             if (m_HitParticles != null) m_HitParticles.Play();
         }
-        void UpdateHitState()
-        {
-            m_HitTimer += Time.deltaTime;
+        //void UpdateHitState()
+        //{
+        //    m_HitTimer += Time.deltaTime;
 
-            if (m_HitTimer >= m_HitDuration)
-            {
-                SetPreviousState();
-            }
-        }
-        void SetPreviousState()
-        {
-            ChangeState(m_previousState);
-            if (m_state != TStates.ALERT && m_state != TStates.DIE)
-            {
-                m_NavMeshAgent.isStopped = false;
-                if (m_state == TStates.PATROL && m_PatrolPosition != null && m_PatrolPosition.Count > 0)
-                {
-                    m_NavMeshAgent.SetDestination(m_PatrolPosition[m_currentPatrolPos].position);
-                }
-            }
-        }
+        //    if (m_HitTimer >= m_HitDuration)
+        //    {
+        //        SetPreviousState();
+        //    }
+        //}
+        //void SetPreviousState()
+        //{
+        //    ChangeState(m_previousState);
+        //    if (m_state != TStates.ALERT && m_state != TStates.DIE)
+        //    {
+        //        m_NavMeshAgent.isStopped = false;
+        //        if (m_state == TStates.PATROL && m_PatrolPosition != null && m_PatrolPosition.Count > 0)
+        //        {
+        //            m_NavMeshAgent.SetDestination(m_PatrolPosition[m_currentPatrolPos].position);
+        //        }
+        //    }
+        //}
     void ChangeState(TStates newState)
         {
             if (m_state != newState)
